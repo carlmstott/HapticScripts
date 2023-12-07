@@ -1771,10 +1771,14 @@ public class HapticPlugin : MonoBehaviour
             Debug.Log(Time.time);
             if (Time.time > 1){
                 float sphereRadius = .04f;
+                float sphereZoffset = .01f;
                 GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                // sphere.transform.position = (transform.localToWorldMatrix * DeviceTransformRaw).ExtractPosition();
-                // sphere.transform.position = gameObject.transform.InverseTransformVector(collision.GetContact(0).point);
-                sphere.transform.position = CollisionMesh.GetComponent<HapticCollider>().transform.position;
+
+                //these three lines should make the sphere created at a small offset from the collider in the Z direction
+                Vector3 basePosition = CollisionMesh.GetComponent<HapticCollider>().transform.position;
+                Vector3 newPosition = new Vector3(basePosition.x, basePosition.y, basePosition.z + sphereZoffset);
+                sphere.transform.position = newPosition;
+
                 sphere.GetComponent<Renderer>().material.color = Color.blue;
                 sphere.name = sphereCount.ToString();
                 sphere.transform.localScale = Vector3.one * sphereRadius * 2;
