@@ -749,11 +749,57 @@ public class HapticPlugin : MonoBehaviour
         
     }
 
+    private GameObject lazer=null;
     void Update()
     {
-         
-        
 
+        //if the lazer exists, destroy it so that I can remake it in the new location
+        if(lazer != null){
+            Destroy(lazer);
+            Debug.Log("here");
+        }
+    }
+    void LateUpdate() //happens after update, should remake the lazer in the new location
+    {
+        if (LastButtons[0] == 1 && Buttons[0] == 1) //if buttion 1 is held down
+        {
+            if(lazer ==null)
+            {
+                ///FOR LAZER AS LINE
+            // lazer = gameObject.AddComponent<LineRenderer>();
+            // lazer.startColor = Color.red;
+            // lazer.endColor = Color.red;
+            // lazer.startWidth = 0.1f;
+            // lazer.endWidth = 0.1f;
+            // lazer.positionCount = 2;
+                ///FOR LAZER AS LINE
+            lazer = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            lazer.transform.localScale = new Vector3(0.1f, 5f, 0.1f); // Adjust the size of the cylinder
+            }
+
+                //now to set the lazer location and direction
+            Vector3 startPoint = CollisionMesh.GetComponent<HapticCollider>().transform.position; //should be position of haptic collider
+            lazer.transform.position = startPoint; // Set the position of the cylinder
+            Quaternion baseRotation = CollisionMesh.GetComponent<HapticCollider>().transform.rotation; //should be the rotation of the haptic collider relative to the world space
+            Vector3 direction = baseRotation * new Vector3(0, 0, 1); //should be a vector from the haptic collider in the direction of the the z firection relative to the haptic collider's local space
+            direction.Normalize(); //should turn direction into a unit vector pointing in the z direction of the haptic colliders local space
+            direction= -direction; //should reverse the lazers direction, without this line the lazer points TWORD the collider instead of away from it
+            float length = 10.0f; //should be the length of the lazer line
+            Vector3 endPoint = startPoint + direction * length; //should be the end point of the lazer line
+            
+                ///FOR LAZER AS LINE
+            // Quaternion baseRotation = CollisionMesh.GetComponent<HapticCollider>().transform.rotation; //should be the rotation of the haptic collider relative to the world space
+            // Vector3 direction = baseRotation * new Vector3(0, 0, 1); //should be a vector from the haptic collider in the direction of the the z firection relative to the haptic collider's local space
+            // direction.Normalize(); //should turn direction into a unit vector pointing in the z direction of the haptic colliders local space
+            // direction= -direction; //should reverse the lazers direction, without this line the lazer points TWORD the collider instead of away from it
+            // float length = 10.0f; //should be the length of the lazer line
+            // Vector3 endPoint = startPoint + direction * length; //should be the end point of the lazer line
+
+            // lazer.SetPosition(0, startPoint);
+            // lazer.SetPosition(1, endPoint);
+                ///FOR LAZER AS LINE
+            }
+            
     }
 
 
@@ -1771,12 +1817,15 @@ public class HapticPlugin : MonoBehaviour
             Debug.Log(Time.time);
             if (Time.time > 1){
                 float sphereRadius = .04f;
-                float sphereZoffset = .01f;
+                float sphereZoffset = -.05f;
                 GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 
-                //these three lines should make the sphere created at a small offset from the collider in the Z direction
+                //these three lines should make the sphere created at a small offset from the collider in the Z direction of
+                //the collider's local space
                 Vector3 basePosition = CollisionMesh.GetComponent<HapticCollider>().transform.position;
-                Vector3 newPosition = new Vector3(basePosition.x, basePosition.y, basePosition.z + sphereZoffset);
+                Quaternion baseRotation = CollisionMesh.GetComponent<HapticCollider>().transform.rotation;
+                Vector3 localOffset = baseRotation * new Vector3(0, 0, sphereZoffset);
+                Vector3 newPosition = basePosition + localOffset;
                 sphere.transform.position = newPosition;
 
                 sphere.GetComponent<Renderer>().material.color = Color.blue;
@@ -1794,8 +1843,27 @@ public class HapticPlugin : MonoBehaviour
         if(LastButtons[0] == 1 && Buttons[0] == 1)
         {
             
-            Events.OnHoldButton1.Invoke();
-            
+            // //Events.OnHoldButton1.Invoke();
+            // //initalizing the red lazer line
+            // LineRenderer lineRenderer = gameObject.AddComponent<LineRenderer>();
+            // lineRenderer.startColor = Color.red;
+            // lineRenderer.endColor = Color.red;
+            // lineRenderer.startWidth = 0.1f;
+            // lineRenderer.endWidth = 0.1f;
+            // lineRenderer.positionCount = 2;
+
+            // //now to set the lazer location and direction
+            // Vector3 startPoint = CollisionMesh.GetComponent<HapticCollider>().transform.position; //should be position of haptic collider
+
+            // Quaternion baseRotation = CollisionMesh.GetComponent<HapticCollider>().transform.rotation; //should be the rotation of the haptic collider relative to the world space
+            // Vector3 direction = baseRotation * new Vector3(0, 0, 1); //should be a vector from the haptic collider in the direction of the the z firection relative to the haptic collider's local space
+            // direction.Normalize(); //should turn direction into a unit vector pointing in the z direction of the haptic colliders local space
+            // direction= -direction; //should reverse the lazers direction, without this line the lazer points TWORD the collider instead of away from it
+            // float length = 10.0f; //should be the length of the lazer line
+            // Vector3 endPoint = startPoint + direction * length; //should be the end point of the lazer line
+
+            // lineRenderer.SetPosition(0, startPoint);
+            // lineRenderer.SetPosition(1, endPoint);
             
         }
         if(LastButtons[0] == 1 && Buttons[0] == 0)
@@ -1808,10 +1876,17 @@ public class HapticPlugin : MonoBehaviour
         {
             Debug.Log("button2 Pressed");
             float sphereRadius = .04f;
+            float sphereZoffset = -.05f;
             GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            // sphere.transform.position = (transform.localToWorldMatrix * DeviceTransformRaw).ExtractPosition();
-            // sphere.transform.position = gameObject.transform.InverseTransformVector(collision.GetContact(0).point);
-            sphere.transform.position = CollisionMesh.GetComponent<HapticCollider>().transform.position;
+
+            //these lines should make the sphere created at a small offset from the collider in the Z direction of
+            //the collider's local space
+            Vector3 basePosition = CollisionMesh.GetComponent<HapticCollider>().transform.position;
+            Quaternion baseRotation = CollisionMesh.GetComponent<HapticCollider>().transform.rotation;
+            Vector3 localOffset = baseRotation * new Vector3(0, 0, sphereZoffset);
+            Vector3 newPosition = basePosition + localOffset;
+            sphere.transform.position = newPosition;
+
             sphere.GetComponent<Renderer>().material.color = Color.red;
             sphere.name = "Red " + sphereCountRed.ToString();
             sphere.transform.localScale = Vector3.one * sphereRadius * 2;
