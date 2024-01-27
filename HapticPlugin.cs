@@ -34,6 +34,10 @@ using UnityEngine.Events;
 using System;
 using HapticGUI;
 using System.Linq;
+using UnityEngine.Rendering.HighDefinition;
+using System.Net;
+
+
 //using StackableDecorator;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -749,45 +753,75 @@ public class HapticPlugin : MonoBehaviour
         
     }
 
-    private GameObject lazer=null;
+    private GameObject lazerHit=null;
     void Update()
     {
 
         //if the lazer exists, destroy it so that I can remake it in the new location
-        if(lazer != null){
-            Destroy(lazer);
-            Debug.Log("here");
+        if(lazerHit != null){
+            Destroy(lazerHit);
         }
     }
     void LateUpdate() //happens after update, should remake the lazer in the new location
     {
+
         if (LastButtons[0] == 1 && Buttons[0] == 1) //if buttion 1 is held down
         {
-            if(lazer ==null)
-            {
-            lazer = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            lazer.transform.localScale = new Vector3(0.1f, 5f, 0.1f); // Adjust the size of the cylinder
-            }
+           
             // Now to set the laser location and direction
             Vector3 startPoint = CollisionMesh.GetComponent<HapticCollider>().transform.position; // Should be position of haptic collider
             Quaternion baseRotation = CollisionMesh.GetComponent<HapticCollider>().transform.rotation; // Should be the rotation of the haptic collider relative to the world space
             Vector3 direction = baseRotation * new Vector3(0, 0, 1); // Should be a vector from the haptic collider in the direction of the the z direction relative to the haptic collider's local space
-            //direction.Normalize(); // Should turn direction into a unit vector pointing in the z direction of the haptic colliders local space
             direction = -direction; // Should reverse the lazers direction, without this line the lazer points TOWARD the collider instead of away from it
-            
-            
-            float length = 1.0f; // Should be the length of the lazer line
-            startPoint += direction *.1f; //move cylender .1f away from haptic collider
-            Vector3 endPoint = startPoint + direction * length; // Should be the end point of the lazer line
 
-            // Set the position of the cylinder to the midpoint between the start and end points
-            lazer.transform.position = (startPoint + endPoint) / 2;
+            // Create a layer mask that includes all layers except HitMarkerLayer
+            int layerMask = ~LayerMask.GetMask("HitMark");
 
-            // Set the rotation of the cylinder to align with the line from the start point to the end point
-            lazer.transform.rotation = Quaternion.FromToRotation(Vector3.up, direction);
+            RaycastHit hit;
+            // Use the layer mask in the raycast
+            if (Physics.Raycast(startPoint, direction, out hit, Mathf.Infinity, layerMask))
+            {
 
-            // Set the scale of the cylinder so its height equals the length of the line
-            lazer.transform.localScale = new Vector3(0.1f, length / 2, 0.1f); // Divide length by 2 because the cylinder's height extends in both directions from the center
+
+                //creating a visual marker at the location of the hit
+                lazerHit = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                lazerHit.transform.position = hit.point;
+                lazerHit.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
+
+                //below code changes the color and opacity of the visual marker of a lazer hitting
+                MeshRenderer meshRenderer = lazerHit.GetComponent<MeshRenderer>();
+
+                // Create a new transparent material
+                Material lazerMat = new Material(Shader.Find("Transparent/Diffuse"));
+                Color lazerMatColor = Color.white; // Change this to the color you want
+                lazerMatColor.a = 0.1f; // Change this to the opacity you want, between 0 (fully transparent) and 1 (fully opaque)
+                lazerMat.color = lazerMatColor;
+
+                // Apply the material to lazerHit
+                meshRenderer.material = lazerMat;
+
+                // Create a new transparent sphere at the hit point
+                GameObject hitMark = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                hitMark.transform.position = hit.point;
+                hitMark.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
+                hitMark.layer = LayerMask.NameToLayer("HitMark");
+
+
+                // Change the color and opacity of hitMark
+                MeshRenderer hitMarkRenderer = hitMark.GetComponent<MeshRenderer>();
+                if (hitMarkRenderer != null)
+                {
+                    // Create a new transparent material
+                    Material lazerLeftoverMat = new Material(Shader.Find("Transparent/Diffuse"));
+                    Color lazerLeftoverMatColor = Color.white; // Change this to the color you want
+                    lazerLeftoverMatColor.a = 0.5f; // Change this to the opacity you want, between 0 (fully transparent) and 1 (fully opaque)
+                    lazerLeftoverMat.color = lazerLeftoverMatColor;
+
+                    // Apply the material to hitMark
+                    hitMarkRenderer.material = lazerLeftoverMat;
+                }
+            }
+
         }
 
             
