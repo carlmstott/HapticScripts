@@ -764,41 +764,44 @@ public class HapticPlugin : MonoBehaviour
     }
     void LateUpdate() //happens after update, should remake the lazer in the new location
     {
-
-        if (LastButtons[0] == 1 && Buttons[0] == 1) //if buttion 1 is held down
-        {
-           
-            // Now to set the laser location and direction
+        // Now to set the laser location and direction
             Vector3 startPoint = CollisionMesh.GetComponent<HapticCollider>().transform.position; // Should be position of haptic collider
             Quaternion baseRotation = CollisionMesh.GetComponent<HapticCollider>().transform.rotation; // Should be the rotation of the haptic collider relative to the world space
             Vector3 direction = baseRotation * new Vector3(0, 0, 1); // Should be a vector from the haptic collider in the direction of the the z direction relative to the haptic collider's local space
             direction = -direction; // Should reverse the lazers direction, without this line the lazer points TOWARD the collider instead of away from it
 
             // Create a layer mask that includes all layers except HitMarkerLayer
-            int layerMask = ~LayerMask.GetMask("HitMark");
 
             RaycastHit hit;
-            // Use the layer mask in the raycast
-            if (Physics.Raycast(startPoint, direction, out hit, Mathf.Infinity, layerMask))
+        if (Physics.Raycast(startPoint, direction, out hit))
             {
 
 
-                //creating a visual marker at the location of the hit
+                //creating a visual marker at the location that the lazer is pointing at
                 lazerHit = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                 lazerHit.transform.position = hit.point;
                 lazerHit.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
 
                 //below code changes the color and opacity of the visual marker of a lazer hitting
-                MeshRenderer meshRenderer = lazerHit.GetComponent<MeshRenderer>();
+                MeshRenderer lazerHitMesh = lazerHit.GetComponent<MeshRenderer>();
 
                 // Create a new transparent material
                 Material lazerMat = new Material(Shader.Find("Transparent/Diffuse"));
                 Color lazerMatColor = Color.white; // Change this to the color you want
-                lazerMatColor.a = 0.1f; // Change this to the opacity you want, between 0 (fully transparent) and 1 (fully opaque)
+                lazerMatColor.a = 0.5f; // Change this to the opacity you want, between 0 (fully transparent) and 1 (fully opaque)
                 lazerMat.color = lazerMatColor;
 
                 // Apply the material to lazerHit
-                meshRenderer.material = lazerMat;
+                lazerHitMesh.material = lazerMat;
+            }
+
+        if (LastButtons[0] == 1 && Buttons[0] == 1) //if buttion 1 is held down
+        {
+           
+            int layerMask = ~LayerMask.GetMask("HitMark");
+            // Use the layer mask in the raycast
+            if (Physics.Raycast(startPoint, direction, out hit, Mathf.Infinity, layerMask))
+            {
 
                 // Create a new transparent sphere at the hit point
                 GameObject hitMark = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -812,13 +815,13 @@ public class HapticPlugin : MonoBehaviour
                 if (hitMarkRenderer != null)
                 {
                     // Create a new transparent material
-                    Material lazerLeftoverMat = new Material(Shader.Find("Transparent/Diffuse"));
-                    Color lazerLeftoverMatColor = Color.white; // Change this to the color you want
-                    lazerLeftoverMatColor.a = 0.5f; // Change this to the opacity you want, between 0 (fully transparent) and 1 (fully opaque)
-                    lazerLeftoverMat.color = lazerLeftoverMatColor;
+                    Material hitMarkMaterial = new Material(Shader.Find("Transparent/Diffuse"));
+                    Color hitMarkMatColor = Color.white; // Change this to the color you want
+                    hitMarkMatColor.a = 0.05f; // Change this to the opacity you want, between 0 (fully transparent) and 1 (fully opaque)
+                    hitMarkMaterial.color = hitMarkMatColor;
 
                     // Apply the material to hitMark
-                    hitMarkRenderer.material = lazerLeftoverMat;
+                    hitMarkRenderer.material = hitMarkMaterial;
                 }
             }
 
