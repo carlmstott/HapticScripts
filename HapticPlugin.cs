@@ -765,14 +765,6 @@ public class HapticPlugin : MonoBehaviour
         {
             if(lazer ==null)
             {
-                ///FOR LAZER AS LINE
-            // lazer = gameObject.AddComponent<LineRenderer>();
-            // lazer.startColor = Color.red;
-            // lazer.endColor = Color.red;
-            // lazer.startWidth = 0.1f;
-            // lazer.endWidth = 0.1f;
-            // lazer.positionCount = 2;
-                ///FOR LAZER AS LINE
             lazer = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             lazer.transform.localScale = new Vector3(0.1f, 5f, 0.1f); // Adjust the size of the cylinder
             }
@@ -780,9 +772,12 @@ public class HapticPlugin : MonoBehaviour
             Vector3 startPoint = CollisionMesh.GetComponent<HapticCollider>().transform.position; // Should be position of haptic collider
             Quaternion baseRotation = CollisionMesh.GetComponent<HapticCollider>().transform.rotation; // Should be the rotation of the haptic collider relative to the world space
             Vector3 direction = baseRotation * new Vector3(0, 0, 1); // Should be a vector from the haptic collider in the direction of the the z direction relative to the haptic collider's local space
-            direction.Normalize(); // Should turn direction into a unit vector pointing in the z direction of the haptic colliders local space
+            //direction.Normalize(); // Should turn direction into a unit vector pointing in the z direction of the haptic colliders local space
             direction = -direction; // Should reverse the lazers direction, without this line the lazer points TOWARD the collider instead of away from it
-            float length = 10.0f; // Should be the length of the lazer line
+            
+            
+            float length = 1.0f; // Should be the length of the lazer line
+            startPoint += direction *.1f; //move cylender .1f away from haptic collider
             Vector3 endPoint = startPoint + direction * length; // Should be the end point of the lazer line
 
             // Set the position of the cylinder to the midpoint between the start and end points
@@ -793,19 +788,8 @@ public class HapticPlugin : MonoBehaviour
 
             // Set the scale of the cylinder so its height equals the length of the line
             lazer.transform.localScale = new Vector3(0.1f, length / 2, 0.1f); // Divide length by 2 because the cylinder's height extends in both directions from the center
+        }
 
-                ///FOR LAZER AS LINE
-            // Quaternion baseRotation = CollisionMesh.GetComponent<HapticCollider>().transform.rotation; //should be the rotation of the haptic collider relative to the world space
-            // Vector3 direction = baseRotation * new Vector3(0, 0, 1); //should be a vector from the haptic collider in the direction of the the z firection relative to the haptic collider's local space
-            // direction.Normalize(); //should turn direction into a unit vector pointing in the z direction of the haptic colliders local space
-            // direction= -direction; //should reverse the lazers direction, without this line the lazer points TWORD the collider instead of away from it
-            // float length = 10.0f; //should be the length of the lazer line
-            // Vector3 endPoint = startPoint + direction * length; //should be the end point of the lazer line
-
-            // lazer.SetPosition(0, startPoint);
-            // lazer.SetPosition(1, endPoint);
-                ///FOR LAZER AS LINE
-            }
             
     }
 
