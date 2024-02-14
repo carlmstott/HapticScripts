@@ -754,8 +754,47 @@ public class HapticPlugin : MonoBehaviour
     }
 
     private GameObject lazerHit=null;
+    public Material LazerdecalMaterial;
+
+    public Texture2D whiteSquare;
+    
     void Update()
     {
+    // Now to set the laser location and direction
+        Vector3 startPoint = CollisionMesh.GetComponent<HapticCollider>().transform.position; // Should be position of haptic collider
+        Quaternion baseRotation = CollisionMesh.GetComponent<HapticCollider>().transform.rotation; // Should be the rotation of the haptic collider relative to the world space
+        Vector3 direction = baseRotation * new Vector3(0, 0, 1); // Should be a vector from the haptic collider in the direction of the the z direction relative to the haptic collider's local space
+        direction = -direction; // Should reverse the lazers direction, without this line the lazer points TOWARD the collider instead of away from it
+
+        // Create a layer mask that includes all layers except HitMarkerLayer
+
+        RaycastHit hit;
+
+        if (Physics.Raycast(startPoint, direction, out hit))
+            {
+
+            // Create a new projector at the hit point
+            GameObject Lazerdecal = new GameObject("lazerDecal");
+            Lazerdecal.transform.position = hit.point + hit.normal * 0.1f; // Offset the projector slightly above the surface to avoid z-fighting
+            Lazerdecal.transform.rotation = Quaternion.LookRotation(-hit.normal); // Rotate the projector to face towards the surface
+
+            // Add a Projector component to the new GameObject
+            Projector projector = Lazerdecal.AddComponent<Projector>();
+
+            // Set the projector to orthographic mode
+            projector.orthographic = true;
+
+            // Set the size of the projector
+            projector.orthographicSize = 0.1f; // Adjust this to change the size of the decal
+
+            // Set the material of the projector to the decal material
+            LazerdecalMaterial.mainTexture = whiteSquare;
+        }
+
+
+
+
+
 
         //if the lazer exists, destroy it so that I can remake it in the new location
         if(lazerHit != null){
@@ -777,7 +816,7 @@ public class HapticPlugin : MonoBehaviour
             {
 
 
-                //creating a visual marker at the location that the lazer is pointing at
+                //OK note that this sphere being created below IS INVISABLE AND IS GOING TO STAY THAT WAY, if I tried to remove it and reaplace it with a spotlight then the whole thing breaks
                 lazerHit = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                 lazerHit.transform.position = hit.point;
                 lazerHit.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
@@ -788,7 +827,7 @@ public class HapticPlugin : MonoBehaviour
                 // Create a new transparent material
                 Material lazerMat = new Material(Shader.Find("Transparent/Diffuse"));
                 Color lazerMatColor = Color.white; // Change this to the color you want
-                lazerMatColor.a = 0.5f; // Change this to the opacity you want, between 0 (fully transparent) and 1 (fully opaque)
+                lazerMatColor.a = 0f; // Change this to the opacity you want, between 0 (fully transparent) and 1 (fully opaque)
                 lazerMat.color = lazerMatColor;
 
                 // Apply the material to lazerHit
@@ -803,26 +842,31 @@ public class HapticPlugin : MonoBehaviour
             if (Physics.Raycast(startPoint, direction, out hit, Mathf.Infinity, layerMask))
             {
 
-                // Create a new transparent sphere at the hit point
-                GameObject hitMark = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                hitMark.transform.position = hit.point;
-                hitMark.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
-                hitMark.layer = LayerMask.NameToLayer("HitMark");
+                // //using spheres to do lazer burning effect
+
+                // // Create a new transparent sphere at the hit point
+                // GameObject hitMark = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                // hitMark.transform.position = hit.point;
+                // hitMark.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
+                // hitMark.layer = LayerMask.NameToLayer("HitMark");
 
 
-                // Change the color and opacity of hitMark
-                MeshRenderer hitMarkRenderer = hitMark.GetComponent<MeshRenderer>();
-                if (hitMarkRenderer != null)
-                {
-                    // Create a new transparent material
-                    Material hitMarkMaterial = new Material(Shader.Find("Transparent/Diffuse"));
-                    Color hitMarkMatColor = Color.white; // Change this to the color you want
-                    hitMarkMatColor.a = 0.05f; // Change this to the opacity you want, between 0 (fully transparent) and 1 (fully opaque)
-                    hitMarkMaterial.color = hitMarkMatColor;
+                // // Change the color and opacity of hitMark
+                // MeshRenderer hitMarkRenderer = hitMark.GetComponent<MeshRenderer>();
+                // if (hitMarkRenderer != null)
+                // {
+                //     // Create a new transparent material
+                //     Material hitMarkMaterial = new Material(Shader.Find("Transparent/Diffuse"));
+                //     Color hitMarkMatColor = Color.white; // Change this to the color you want
+                //     hitMarkMatColor.a = 0.01f; // Change this to the opacity you want, between 0 (fully transparent) and 1 (fully opaque)
+                //     hitMarkMaterial.color = hitMarkMatColor;
 
-                    // Apply the material to hitMark
-                    hitMarkRenderer.material = hitMarkMaterial;
-                }
+                //     // Apply the material to hitMark
+                //     hitMarkRenderer.material = hitMarkMaterial;
+                // }
+
+
+
             }
 
         }
